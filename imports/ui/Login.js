@@ -1,27 +1,29 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Meteor } from 'meteor/meteor';
+import { createContainer } from 'meteor/react-meteor-data';
 
-export default class NotFound extends React.Component {
-  state = {
-    error: ''
+export class Login extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      error: ''
+    };
   }
-
-  onSubmit= (e) => {
+  onSubmit(e) {
     e.preventDefault();
 
     let email = this.refs.email.value.trim();
     let password = this.refs.password.value.trim();
 
-    Meteor.loginWithPassword({email}, password, (err) => {
-      if(err) {
-        this.setState({error: 'Unable to login. Check your email and/or password.'});
+    this.props.loginWithPassword({email}, password, (err) => {
+      if (err) {
+        this.setState({error: 'Unable to login. Check email and password.'});
       } else {
         this.setState({error: ''});
       }
     });
   }
-
   render() {
     return (
       <div className="boxed-view">
@@ -36,9 +38,19 @@ export default class NotFound extends React.Component {
             <button className="button">Login</button>
           </form>
 
-          <Link to="/signup">Have an account?</Link>
+          <Link to="/signup">Need an account?</Link>
         </div>
       </div>
     );
   }
 }
+
+Login.propTypes = {
+  loginWithPassword: React.PropTypes.func.isRequired
+};
+
+export default createContainer(() => {
+  return {
+    loginWithPassword: Meteor.loginWithPassword
+  };
+}, Login);

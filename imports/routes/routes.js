@@ -1,43 +1,40 @@
 import { Meteor } from 'meteor/meteor';
 import React from 'react';
-import {Router as Router, Switch, Route, Redirect} from 'react-router-dom';
-import createBrowserHistory from 'history/createBrowserHistory';
+import { Router, Route, browserHistory } from 'react-router';
 
 import Signup from '../ui/Signup';
 import Dashboard from '../ui/Dashboard';
 import NotFound from '../ui/NotFound';
 import Login from '../ui/Login';
 
-const history = createBrowserHistory();
-
 const unauthenticatedPages = ['/', '/signup'];
 const authenticatedPages = ['/dashboard'];
-
+const onEnterPublicPage = () => {
+  if (Meteor.userId()) {
+    browserHistory.replace('/dashboard');
+  }
+};
+const onEnterPrivatePage = () => {
+  if (!Meteor.userId()) {
+    browserHistory.replace('/');
+  }
+};
 export const onAuthChange = (isAuthenticated) => {
-  const pathname = location.pathname;
+  const pathname = browserHistory.getCurrentLocation().pathname;
   const isUnauthenticatedPage = unauthenticatedPages.includes(pathname);
   const isAuthenticatedPage = authenticatedPages.includes(pathname);
 
   if (isUnauthenticatedPage && isAuthenticated) {
-    history.replace('/dashboard');
-  } else if (authenticatedPages && !isAuthenticated) {
-    history.replace('/');
+    browserHistory.replace('/dashboard');
+  } else if (isAuthenticatedPage && !isAuthenticated) {
+    browserHistory.replace('/');
   }
 };
-
 export const routes = (
-  <Router history={history}>
-    <Switch>
-      <Route exact path="/" render={() => {
-        return Meteor.userId() ? <Redirect to='/dashboard' /> : <Login />
-      }} />
-      <Route path="/signup" render={() => {
-        return Meteor.userId() ? <Redirect to='/dashboard' /> : <Signup />
-      }} />
-      <Route path="/dashboard" render={() => {
-        return !Meteor.userId() ? <Redirect to='/' /> : <Dashboard />
-      }} />
-      <Route path="*" component={NotFound}/>
-    </Switch>
+  <Router history={browserHistory}>
+    <Route path="/" component={Login} onEnter={onEnterPublicPage}/>
+    <Route path="/signup" component={Signup} onEnter={onEnterPublicPage}/>
+    <Route path="/dashboard" component={Dashboard} onEnter={onEnterPrivatePage}/>
+    <Route path="*" component={NotFound}/>
   </Router>
 );
